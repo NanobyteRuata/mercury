@@ -1,0 +1,22 @@
+PODS:
+  - Flutter (1.0.0)
+  - sms (0.0.1):
+    - Flutter
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - sms (from `.symlinks/plugins/sms/ios`)
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  sms:
+    :path: ".symlinks/plugins/sms/ios"
+
+SPEC CHECKSUMS:
+  Flutter: 434fef37c0980e73bb6479ef766c45957d4b510c
+  sms: 1e6c3082da09f2a4961d61bc254cc86865993ffd
+
+PODFILE CHECKSUM: aafe91acc616949ddb318b77800a7f51bffa2a4c
+
+COCOAPODS: 1.10.1
