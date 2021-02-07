@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:mercury/components/message.dart';
 import 'package:mercury/models/contact.dart';
@@ -48,7 +46,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
           Card(
             child: ExpansionTile(
               leading: Icon(
-                Icons.construction_sharp,
+                Icons.perm_contact_cal,
                 color: Colors.blue,
               ),
               title: Text("Contact Details"),
