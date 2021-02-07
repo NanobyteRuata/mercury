@@ -1,7 +1,7 @@
 import 'package:mercury/utils/encryption_utils.dart';
 import 'package:sms/sms.dart';
 
-class SmsUtil {
+class SmsService {
   static final SmsQuery query = new SmsQuery();
   static final SmsSender sender = new SmsSender();
 
@@ -69,5 +69,13 @@ class SmsUtil {
       print(e);
       return [];
     }
+  }
+
+  static Future<List<SmsThread>> getAllThreads() async {
+    return (await query.getAllThreads)
+        .where((element) =>
+            element.address.startsWith('+959') ||
+            element.address.startsWith('09'))
+        .toList();
   }
 }
