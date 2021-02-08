@@ -6,7 +6,27 @@ extension SmsThreadExtensions on SmsThread {
 }
 
 extension DateTimeExtensions on DateTime {
-  String formatDate() => DateFormat.yMMMd().format(this);
-  String formatTime() => DateFormat.jm().format(this);
-  String formatDateTime() => DateFormat.jm().add_yMMMd().format(this);
+  String formatDate() {
+    try {
+      return DateFormat.yMMMd().format(this);
+    } catch (e) {
+      return '';
+    }
+  }
+
+  String formatTime() {
+    try {
+      return DateFormat.jm().format(this);
+    } catch (e) {
+      return '';
+    }
+  }
+
+  String formatDateTime() {
+    try {
+      return DateFormat.jm().add_yMMMd().format(this);
+    } catch (e) {
+      return '';
+    }
+  }
 }

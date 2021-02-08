@@ -127,12 +127,11 @@ class _MessagesScreenState extends State<MessagesScreen> {
           itemBuilder: (BuildContext context, int index) {
             final prevMsg = index == 0 ? null : smsMessages[index - 1];
             final message = smsMessages[index];
-            final dateChanged = _isDateChange(message.dateSent, prevMsg?.dateSent);
-            if (dateChanged) print('Change from ${prevMsg?.dateSent} to ${message.dateSent}');
+            final dateChanged = _isDateChange((message.dateSent ?? message.date), (prevMsg?.dateSent ?? prevMsg?.date));
 
             return Column(
               children: [
-                if (prevMsg == null || index == smsMessages.length - 1) _dateDivider(context, message), // first and last message
+                if (index == smsMessages.length - 1) _dateDivider(context, message), // first and last message
                 Message(
                   secretKey: _keyController.text,
                   decrypt: isShowEncrypted,
@@ -156,8 +155,17 @@ class _MessagesScreenState extends State<MessagesScreen> {
             child: Padding(
               padding: EdgeInsets.all(8),
               child: TextField(
+                maxLines: null,
                 controller: _messageController,
-                decoration: InputDecoration(hintText: "Message..."),
+                keyboardType: TextInputType.multiline,
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  errorBorder: InputBorder.none,
+                  disabledBorder: InputBorder.none,
+                  hintText: "Message...",
+                ),
                 onChanged: (value) => setState(() {}),
               ),
             ),
@@ -173,6 +181,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   Widget _dateDivider(BuildContext context, SmsMessage message) {
     final line = Expanded(child: Container(width: double.maxFinite, height: 0.5, color: Theme.of(context).focusColor));
+    final dateSend = (message.dateSent ?? message.date).formatDate();
     return Container(
       margin: EdgeInsets.only(bottom: 16),
       child: Row(
@@ -181,7 +190,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
           line,
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Text(message.dateSent.formatDate(), style: TextStyle(fontSize: 10, color: Theme.of(context).disabledColor)),
+            child: Text(dateSend, style: TextStyle(fontSize: 10, color: Theme.of(context).disabledColor)),
           ),
           line,
         ],
@@ -304,6 +313,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
     }
     if (tempSmsMessage != null) {
       tempSmsMessage.kind = SmsMessageKind.Sent;
+      tempSmsMessage.date = DateTime.now();
       _onSmsChanged(tempSmsMessage);
     }
     _messageController.text = "";

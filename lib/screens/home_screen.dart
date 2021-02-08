@@ -91,7 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   ListTile _messageListTile(SmsThread thread) {
-    final trailingTextStyle = TextStyle(color: Colors.grey[800], fontSize: 11);
+    final trailingTextStyle = TextStyle(color: Theme.of(context).disabledColor, fontSize: 11);
     return ListTile(
       leading: Icon(Icons.comment, color: Colors.blue),
       title: Text(
