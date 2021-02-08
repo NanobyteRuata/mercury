@@ -5,6 +5,8 @@ import 'package:mercury/services/contacts_db_service.dart';
 import 'package:mercury/services/sms_service.dart';
 import 'package:sms/sms.dart';
 
+import '../extensions.dart';
+
 class MessagesScreen extends StatefulWidget {
   final SmsThread thread;
   final Contact contact;
@@ -116,7 +118,6 @@ class _MessagesScreenState extends State<MessagesScreen> {
   }
 
   Widget _messageListView() {
-    SmsMessage prevMsg;
     return Expanded(
       child: Scrollbar(
         child: ListView.builder(
@@ -124,15 +125,21 @@ class _MessagesScreenState extends State<MessagesScreen> {
           itemCount: smsMessages.length,
           padding: EdgeInsets.symmetric(horizontal: 8),
           itemBuilder: (BuildContext context, int index) {
+            final prevMsg = index == 0 ? null : smsMessages[index - 1];
             final message = smsMessages[index];
             final dateChanged = _isDateChange(message.dateSent, prevMsg?.dateSent);
-            prevMsg = message;
+            if (dateChanged) print('Change from ${prevMsg?.dateSent} to ${message.dateSent}');
 
-            return Message(
-              secretKey: _keyController.text,
-              decrypt: isShowEncrypted,
-              smsMessage: message,
-              showDate: dateChanged,
+            return Column(
+              children: [
+                if (prevMsg == null || index == smsMessages.length - 1) _dateDivider(context, message), // first and last message
+                Message(
+                  secretKey: _keyController.text,
+                  decrypt: isShowEncrypted,
+                  smsMessage: message,
+                ),
+                if (dateChanged && prevMsg != null) _dateDivider(context, prevMsg),
+              ],
             );
           },
         ),
@@ -164,8 +171,26 @@ class _MessagesScreenState extends State<MessagesScreen> {
     );
   }
 
-  bool _isDateChange(DateTime date1, DateTime date2) {
-    return date1?.month != date2?.month && date1?.day != date2?.day;
+  Widget _dateDivider(BuildContext context, SmsMessage message) {
+    final line = Expanded(child: Container(width: double.maxFinite, height: 0.5, color: Theme.of(context).focusColor));
+    return Container(
+      margin: EdgeInsets.only(bottom: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          line,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(message.dateSent.formatDate(), style: TextStyle(fontSize: 10, color: Theme.of(context).disabledColor)),
+          ),
+          line,
+        ],
+      ),
+    );
+  }
+
+  bool _isDateChange(DateTime currentDate, DateTime previousDate) {
+    return currentDate?.month != previousDate?.month || currentDate?.day != previousDate?.day;
   }
 
   _getMessages() async {

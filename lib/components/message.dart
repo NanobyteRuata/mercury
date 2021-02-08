@@ -8,9 +8,8 @@ class Message extends StatelessWidget {
   final SmsMessage smsMessage;
   final bool decrypt;
   final String secretKey;
-  final bool showDate;
 
-  Message({Key key, @required this.smsMessage, this.decrypt = false, this.secretKey, this.showDate}) : super(key: key);
+  Message({Key key, @required this.smsMessage, this.decrypt = false, this.secretKey}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +23,6 @@ class Message extends StatelessWidget {
             child: Column(
               crossAxisAlignment: smsMessage.kind == SmsMessageKind.Sent ? CrossAxisAlignment.end : CrossAxisAlignment.start,
               children: [
-                if (showDate) _dateDivider(context, smsMessage),
                 _messageInfoText(context, smsMessage),
                 _messageText(context, smsMessage),
               ],
@@ -35,28 +33,10 @@ class Message extends StatelessWidget {
     );
   }
 
-  Widget _dateDivider(BuildContext context, SmsMessage message) {
-    final line = Expanded(child: Container(width: double.maxFinite, height: 0.5, color: Theme.of(context).focusColor));
-    return Container(
-      margin: EdgeInsets.only(bottom: 16),
-      width: MediaQuery.of(context).size.width - 32,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          line,
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Text(message.dateSent.formatDate(), style: TextStyle(fontSize: 10, color: Theme.of(context).disabledColor)),
-          ),
-          line,
-        ],
-      ),
-    );
-  }
-
   Widget _messageInfoText(BuildContext context, SmsMessage message) {
     final textStye = TextStyle(fontSize: 11, color: Theme.of(context).disabledColor);
-    final sendDate = message.date.formatTime();
+    final sendDate = message.dateSent.formatTime();
+
     if (message.kind == SmsMessageKind.Sent) {
       return Text(sendDate, style: textStye);
     }
