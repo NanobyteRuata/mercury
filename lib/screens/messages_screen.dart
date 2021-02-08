@@ -269,7 +269,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
     if (keyController.text.length != 8) {
       tempSmsMessage = await SmsService.sendNormalSMS(
           widget.thread != null
-              ? widget.thread.address
+              ? [widget.thread.address]
               : contact.address
                   .split(',')
                   .where((addressStr) => addressStr.trim() != "")
@@ -278,7 +278,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
     } else {
       tempSmsMessage = await SmsService.sendEncryptedSMS(
           widget.thread != null
-              ? widget.thread.address
+              ? [widget.thread.address]
               : contact.address
                   .split(',')
                   .where((addressStr) => addressStr.trim() != "")
