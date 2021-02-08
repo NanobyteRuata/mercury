@@ -1,13 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:mercury/components/new_message_dialog.dart';
 import 'package:mercury/models/contact.dart';
 import 'package:mercury/screens/messages_screen.dart';
 import 'package:mercury/services/contacts_db_service.dart';
 import 'package:mercury/services/sms_service.dart';
 import 'package:sms/sms.dart';
+
+import '../extensions.dart';
 
 class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
@@ -43,29 +44,24 @@ class _HomeScreenState extends State<HomeScreen> {
           )
         ],
       ),
-      body: Container(
-        child: DefaultTabController(
-          length: 2,
-          initialIndex: 0,
-          child: Column(
-            children: [
-              TabBar(
-                labelColor: Colors.blue,
-                tabs: [
-                  Tab(text: "All Messages"),
-                  Tab(text: "Contacts"),
+      body: DefaultTabController(
+        length: 2,
+        initialIndex: 0,
+        child: Column(
+          children: [
+            TabBar(
+              labelColor: Colors.blue,
+              tabs: [Tab(text: "All Messages"), Tab(text: "Contacts")],
+            ),
+            Expanded(
+              child: TabBarView(
+                children: [
+                  _messageListView(),
+                  _contactListView(),
                 ],
               ),
-              Expanded(
-                child: TabBarView(
-                  children: [
-                    _messageListView(),
-                    _contactListView(),
-                  ],
-                ),
-              )
-            ],
-          ),
+            )
+          ],
         ),
       ),
       floatingActionButton: Builder(
@@ -85,52 +81,40 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _messageListView() {
     if (threads.length == 0) return Center(child: CircularProgressIndicator());
 
-    return ListView.builder(
-      itemCount: threads.length,
-      itemBuilder: (BuildContext context, int index) {
-        return Container(
-          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey))),
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 8),
-            child: ListTile(
-              leading: Icon(
-                Icons.comment,
-                color: Colors.blue,
-              ),
-              isThreeLine: true,
-              title: Text(
-                contacts.where((contact) => threads[index].address == contact.address).length > 0
-                    ? contacts.where((contact) => threads[index].address == contact.address).first.name
-                    : threads[index].address,
-              ),
-              subtitle: Text(
-                threads[index].messages[0].body,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              trailing: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(
-                    DateFormat.jm().format(threads[index].messages[0].date),
-                    style: TextStyle(color: Colors.grey[800], fontSize: 11),
-                  ),
-                  Text(
-                    DateFormat.yMMMMd().format(threads[index].messages[0].date),
-                    style: TextStyle(color: Colors.grey[800], fontSize: 11),
-                  )
-                ],
-              ),
-              onTap: () => Navigator.push(
-                context,
-                new MaterialPageRoute(
-                  builder: (BuildContext context) => MessagesScreen(
-                    thread: threads[index],
-                  ),
-                ),
-              ),
-            ),
+    return Scrollbar(
+      child: ListView.separated(
+        itemCount: threads.length,
+        separatorBuilder: (_, __) => Divider(height: 1),
+        itemBuilder: (context, index) => _messageListTile(threads[index]),
+      ),
+    );
+  }
+
+  ListTile _messageListTile(SmsThread thread) {
+    final trailingTextStyle = TextStyle(color: Colors.grey[800], fontSize: 11);
+    return ListTile(
+      leading: Icon(Icons.comment, color: Colors.blue),
+      title: Text(
+        contacts.where((contact) => thread.address == contact.address).length > 0 ? contacts.where((contact) => thread.address == contact.address).first.name : thread.address,
+      ),
+      subtitle: Text(
+        thread.lastMessage.body,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
+      trailing: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(thread.lastMessage.date.formatTime(), style: trailingTextStyle),
+          Text(thread.lastMessage.date.formatDate(), style: trailingTextStyle),
+        ],
+      ),
+      onTap: () {
+        Navigator.push(
+          context,
+          new MaterialPageRoute(
+            builder: (BuildContext context) => MessagesScreen(thread: thread),
           ),
         );
       },
@@ -141,48 +125,45 @@ class _HomeScreenState extends State<HomeScreen> {
     if (contacts == null) return Center(child: CircularProgressIndicator());
     if (contacts.length == 0) return Center(child: Text("No contacts"));
 
-    return ListView.builder(
-      itemCount: contacts.length,
-      itemBuilder: (BuildContext context, int index) => _contactListTile(contacts[index]),
+    return Scrollbar(
+      child: ListView.separated(
+        separatorBuilder: (_, __) => Divider(height: 1),
+        itemCount: contacts.length,
+        itemBuilder: (context, index) => _contactListTile(contacts[index]),
+      ),
     );
   }
 
   Widget _contactListTile(Contact contact) {
-    return Container(
-      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey))),
-      child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 8),
-        child: ListTile(
-          leading: Icon(Icons.person, color: Colors.blue),
-          title: Text(contact.name),
-          subtitle: Text(contact.address),
-          trailing: IconButton(
-            icon: Icon(Icons.delete, color: Colors.red),
-            onPressed: () async {
-              bool status = await showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  content: Text("Are you sure?"),
-                  actions: [
-                    TextButton(onPressed: () => Navigator.pop(context, false), child: Text("No")),
-                    TextButton(onPressed: () => Navigator.pop(context, true), child: Text("Yes"))
-                  ],
-                ),
-              );
-              if (status) await ContactsDbService.deleteContact(contact.id);
-              _getContacts();
-            },
-          ),
-          onTap: () async {
-            Navigator.push(
-              context,
-              new MaterialPageRoute(
-                builder: (BuildContext context) => MessagesScreen(contact: contact),
-              ),
-            );
-          },
-        ),
+    return ListTile(
+      leading: Icon(Icons.person, color: Colors.blue),
+      title: Text(contact.name),
+      subtitle: Text(contact.address),
+      trailing: IconButton(
+        icon: Icon(Icons.delete, color: Colors.red),
+        onPressed: () async {
+          bool status = await showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              content: Text("Are you sure?"),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(context, false), child: Text("No")),
+                TextButton(onPressed: () => Navigator.pop(context, true), child: Text("Yes"))
+              ],
+            ),
+          );
+          if (status) await ContactsDbService.deleteContact(contact.id);
+          _getContacts();
+        },
       ),
+      onTap: () async {
+        Navigator.push(
+          context,
+          new MaterialPageRoute(
+            builder: (BuildContext context) => MessagesScreen(contact: contact),
+          ),
+        );
+      },
     );
   }
 
