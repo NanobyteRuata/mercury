@@ -8,4 +8,5 @@ extension SmsThreadExtensions on SmsThread {
 extension DateTimeExtensions on DateTime {
   String formatDate() => DateFormat.yMMMd().format(this);
   String formatTime() => DateFormat.jm().format(this);
+  String formatDateTime() => DateFormat.jm().add_yMMMd().format(this);
 }

@@ -19,18 +19,27 @@ class _MessagesScreenState extends State<MessagesScreen> {
   final key = new GlobalKey<ScaffoldState>();
   List<SmsMessage> smsMessages = [];
   bool isShowEncrypted = false;
-  TextEditingController keyController = TextEditingController();
-  TextEditingController nameController = TextEditingController();
-  TextEditingController addressController = TextEditingController();
-  TextEditingController messageController = TextEditingController();
-  SmsReceiver receiver = new SmsReceiver();
+  final _keyController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _messageController = TextEditingController();
+  final _receiver = new SmsReceiver();
   Contact contact;
 
   @override
   void initState() {
     _checkContact();
-    receiver.onSmsReceived.listen(_onSmsChanged);
+    _receiver.onSmsReceived.listen(_onSmsChanged);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _keyController.dispose();
+    _nameController.dispose();
+    _addressController.dispose();
+    _messageController.dispose();
+    super.dispose();
   }
 
   @override
@@ -67,7 +76,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
             child: Column(
               children: [
                 TextField(
-                  controller: keyController,
+                  controller: _keyController,
                   decoration: InputDecoration(prefixIcon: Icon(Icons.vpn_key), hintText: "Secret Key (8 characters)"),
                   maxLength: 8,
                   onChanged: (value) {
@@ -75,7 +84,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   },
                 ),
                 TextField(
-                  controller: nameController,
+                  controller: _nameController,
                   decoration: InputDecoration(
                       prefixIcon: Icon(Icons.person),
                       hintText: contact != null
@@ -87,7 +96,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 ),
                 if (widget.thread == null)
                   TextField(
-                    controller: addressController,
+                    controller: _addressController,
                     maxLines: 2,
                     onChanged: (value) => setState(() {}),
                     decoration: InputDecoration(prefixIcon: Icon(Icons.phone_android), hintText: "Phone Numbers (seperated by commas \",\")"),
@@ -107,17 +116,26 @@ class _MessagesScreenState extends State<MessagesScreen> {
   }
 
   Widget _messageListView() {
+    SmsMessage prevMsg;
     return Expanded(
-      child: ListView.builder(
-        reverse: true,
-        itemCount: smsMessages.length,
-        itemBuilder: (BuildContext context, int index) {
-          return Message(
-            secretKey: keyController.text,
-            decrypt: isShowEncrypted,
-            smsMessage: smsMessages[index],
-          );
-        },
+      child: Scrollbar(
+        child: ListView.builder(
+          reverse: true,
+          itemCount: smsMessages.length,
+          padding: EdgeInsets.symmetric(horizontal: 8),
+          itemBuilder: (BuildContext context, int index) {
+            final message = smsMessages[index];
+            final dateChanged = _isDateChange(message.dateSent, prevMsg?.dateSent);
+            prevMsg = message;
+
+            return Message(
+              secretKey: _keyController.text,
+              decrypt: isShowEncrypted,
+              smsMessage: message,
+              showDate: dateChanged,
+            );
+          },
+        ),
       ),
     );
   }
@@ -131,19 +149,23 @@ class _MessagesScreenState extends State<MessagesScreen> {
             child: Padding(
               padding: EdgeInsets.all(8),
               child: TextField(
-                controller: messageController,
+                controller: _messageController,
                 decoration: InputDecoration(hintText: "Message..."),
                 onChanged: (value) => setState(() {}),
               ),
             ),
           ),
           IconButton(
-            icon: Icon(Icons.send, color: messageController.text.length == 0 ? Colors.grey : Colors.green),
-            onPressed: messageController.text.length == 0 ? null : _sendSms,
+            icon: Icon(Icons.send, color: _messageController.text.length == 0 ? Colors.grey : Colors.green),
+            onPressed: _messageController.text.length == 0 ? null : _sendSms,
           )
         ],
       ),
     );
+  }
+
+  bool _isDateChange(DateTime date1, DateTime date2) {
+    return date1?.month != date2?.month && date1?.day != date2?.day;
   }
 
   _getMessages() async {
@@ -173,14 +195,14 @@ class _MessagesScreenState extends State<MessagesScreen> {
   _saveContact() async {
     bool status = false;
     if (contact == null) {
-      status = await ContactsDbService.saveContact(name: nameController.text, address: widget.thread.address, key: keyController.text, isGroup: false);
+      status = await ContactsDbService.saveContact(name: _nameController.text, address: widget.thread.address, key: _keyController.text, isGroup: false);
     } else {
       status = await ContactsDbService.updateContact(
-          name: nameController.text,
-          address: addressController.text,
-          key: keyController.text,
+          name: _nameController.text,
+          address: _addressController.text,
+          key: _keyController.text,
           id: contact.id,
-          isGroup: addressController.text.split(',').where((addressStr) => addressStr.trim() != "").where((addressStr) => addressStr.trim() != "").length > 1);
+          isGroup: _addressController.text.split(',').where((addressStr) => addressStr.trim() != "").where((addressStr) => addressStr.trim() != "").length > 1);
     }
     final snackBar = SnackBar(content: Text(status ? 'Save successful' : 'Unsuccessful'));
     key.currentState.showSnackBar(snackBar);
@@ -206,9 +228,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
     }
 
     if (tempContact != null) {
-      nameController.text = tempContact.name;
-      keyController.text = tempContact.key;
-      addressController.text = tempContact.address;
+      _nameController.text = tempContact.name;
+      _keyController.text = tempContact.key;
+      _addressController.text = tempContact.address;
       setState(() {
         contact = tempContact;
         isShowEncrypted = (tempContact.key != null && tempContact.key.length == 8) ? true : false;
@@ -246,19 +268,19 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   _sendSms() async {
     SmsMessage tempSmsMessage;
-    if (keyController.text.length != 8) {
+    if (_keyController.text.length != 8) {
       tempSmsMessage = await SmsService.sendNormalSMS(
-          widget.thread != null ? [widget.thread.address] : contact.address.split(',').where((addressStr) => addressStr.trim() != "").toList(), messageController.text);
+          widget.thread != null ? [widget.thread.address] : contact.address.split(',').where((addressStr) => addressStr.trim() != "").toList(), _messageController.text);
     } else {
       tempSmsMessage = await SmsService.sendEncryptedSMS(
           widget.thread != null ? [widget.thread.address] : contact.address.split(',').where((addressStr) => addressStr.trim() != "").toList(),
-          messageController.text,
-          keyController.text + keyController.text);
+          _messageController.text,
+          _keyController.text + _keyController.text);
     }
     if (tempSmsMessage != null) {
       tempSmsMessage.kind = SmsMessageKind.Sent;
       _onSmsChanged(tempSmsMessage);
     }
-    messageController.text = "";
+    _messageController.text = "";
   }
 }
