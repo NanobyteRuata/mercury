@@ -16,6 +16,7 @@ class MessagesScreen extends StatefulWidget {
 }
 
 class _MessagesScreenState extends State<MessagesScreen> {
+  final key = new GlobalKey<ScaffoldState>();
   List<SmsMessage> smsMessages = [];
   bool isShowEncrypted = false;
   TextEditingController keyController = TextEditingController();
@@ -35,6 +36,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: key,
       appBar: AppBar(
         title: Text(contact == null ? widget.thread.address : contact.name),
         actions: [
@@ -181,7 +183,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
           isGroup: addressController.text.split(',').where((addressStr) => addressStr.trim() != "").where((addressStr) => addressStr.trim() != "").length > 1);
     }
     final snackBar = SnackBar(content: Text(status ? 'Save successful' : 'Unsuccessful'));
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    key.currentState.showSnackBar(snackBar);
   }
 
   _checkContact() async {
