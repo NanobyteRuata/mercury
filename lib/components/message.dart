@@ -8,52 +8,34 @@ class Message extends StatelessWidget {
   final bool decrypt;
   final String secretKey;
 
-  Message(
-      {Key key,
-      @required this.smsMessage,
-      this.decrypt = false,
-      this.secretKey})
-      : super(key: key);
+  Message({Key key, @required this.smsMessage, this.decrypt = false, this.secretKey}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
-      textDirection: smsMessage.kind == SmsMessageKind.Sent
-          ? TextDirection.rtl
-          : TextDirection.ltr,
+      textDirection: smsMessage.kind == SmsMessageKind.Sent ? TextDirection.rtl : TextDirection.ltr,
       children: [
         Container(
-          constraints:
-              BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8),
+          constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
-            color: smsMessage.kind == SmsMessageKind.Sent
-                ? Colors.blue
-                : Colors.grey[200],
+            color: smsMessage.kind == SmsMessageKind.Sent ? Colors.blue : Colors.grey[200],
           ),
           margin: EdgeInsets.symmetric(vertical: 8),
           padding: EdgeInsets.all(8),
           child: Column(
-            crossAxisAlignment: smsMessage.kind == SmsMessageKind.Sent
-                ? CrossAxisAlignment.end
-                : CrossAxisAlignment.start,
+            crossAxisAlignment: smsMessage.kind == SmsMessageKind.Sent ? CrossAxisAlignment.end : CrossAxisAlignment.start,
             children: [
               if (smsMessage.kind == SmsMessageKind.Received)
                 Text(
                   smsMessage.address,
                   style: TextStyle(color: Colors.blue, fontSize: 11),
                 ),
-              if (smsMessage.kind == SmsMessageKind.Received)
-                Padding(padding: EdgeInsets.only(top: 5)),
+              if (smsMessage.kind == SmsMessageKind.Received) Padding(padding: EdgeInsets.only(top: 5)),
               Text(
-                decrypt
-                    ? EncryptionUtil.decrypt(
-                        secretKey + secretKey, smsMessage.body)
-                    : smsMessage.body,
-                textAlign: smsMessage.kind == SmsMessageKind.Sent
-                    ? TextAlign.right
-                    : TextAlign.left,
+                decrypt ? EncryptionUtil.decrypt(secretKey + secretKey, smsMessage.body) : smsMessage.body,
+                textAlign: smsMessage.kind == SmsMessageKind.Sent ? TextAlign.right : TextAlign.left,
               ),
               Padding(padding: EdgeInsets.only(top: 5)),
               Text(

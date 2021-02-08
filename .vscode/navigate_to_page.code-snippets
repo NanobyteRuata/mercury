@@ -1,0 +1,16 @@
+{
+  "Entity class": {
+    "scope": "dart",
+    "prefix": "nvp",
+    "body": [
+      "Navigator.of(context).push(",
+      "  MaterialPageRoute(",
+      "    builder: (BuildContext context) => $1(),",
+      "    settings: RouteSettings(name: $2),",
+      "    fullscreenDialog: true,",
+      "  ),",
+      ")"
+    ],
+    "description": "Navigate to page"
+  }
+}

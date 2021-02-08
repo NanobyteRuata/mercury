@@ -1,0 +1,7 @@
+{
+  "files.exclude": {
+    "**/*.g.dart": {
+      "when": "$(basename).dart"
+    }
+  }
+}
