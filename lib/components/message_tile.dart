@@ -4,12 +4,12 @@ import 'package:sms/sms.dart';
 
 import '../extensions.dart';
 
-class Message extends StatelessWidget {
+class MessageTile extends StatelessWidget {
   final SmsMessage smsMessage;
   final bool decrypt;
   final String secretKey;
 
-  Message({Key key, @required this.smsMessage, this.decrypt = false, this.secretKey}) : super(key: key);
+  MessageTile({Key key, @required this.smsMessage, this.decrypt = false, this.secretKey}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

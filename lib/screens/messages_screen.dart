@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mercury/components/message.dart';
+import 'package:mercury/components/message_tile.dart';
 import 'package:mercury/models/contact.dart';
 import 'package:mercury/services/contacts_db_service.dart';
 import 'package:mercury/services/sms_service.dart';
@@ -132,7 +132,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
             return Column(
               children: [
                 if (index == smsMessages.length - 1) _dateDivider(context, message), // first and last message
-                Message(
+                MessageTile(
                   secretKey: _keyController.text,
                   decrypt: isShowEncrypted,
                   smsMessage: message,
