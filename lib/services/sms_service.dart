@@ -35,6 +35,7 @@ class SmsService {
     try {
       // trim for no space
       phoneNumber = phoneNumber.trim();
+      
       // if phoneNumber is with country code,
       // set modifiedPhoneNumber to be without country code
       // and vice versa
