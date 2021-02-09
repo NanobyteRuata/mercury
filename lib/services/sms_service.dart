@@ -1,38 +1,37 @@
-import 'package:mercury/utils/encryption_utils.dart';
 import 'package:sms/sms.dart';
+
+import '../models/message_thread.dart';
+import '../models/message.dart';
+import '../utils/encryption_utils.dart';
+import '../extensions.dart';
 
 class SmsService {
   static final SmsQuery query = new SmsQuery();
   static final SmsSender sender = new SmsSender();
 
-  static Future<SmsMessage> sendNormalSMS(
-      List<String> phoneNumbers, String message) async {
+  static Future<Message> sendNormalSMS(List<String> phoneNumbers, String message) async {
     try {
       SmsMessage smsMessage;
-      for (String phoneNumber in phoneNumbers)
-        smsMessage = await sender.sendSms(new SmsMessage(phoneNumber, message));
-      return smsMessage;
+      for (String phoneNumber in phoneNumbers) smsMessage = await sender.sendSms(new SmsMessage(phoneNumber, message));
+      return smsMessage.toMessage();
     } catch (e) {
       print(e);
       return null;
     }
   }
 
-  static Future<SmsMessage> sendEncryptedSMS(
-      List<String> phoneNumbers, String message, String key) async {
+  static Future<Message> sendEncryptedSMS(List<String> phoneNumbers, String message, String key) async {
     try {
       SmsMessage smsMessage;
-      for (String phoneNumber in phoneNumbers)
-        smsMessage = await sender.sendSms(
-            new SmsMessage(phoneNumber, EncryptionUtil.encrypt(key, message)));
-      return smsMessage;
+      for (String phoneNumber in phoneNumbers) smsMessage = await sender.sendSms(new SmsMessage(phoneNumber, EncryptionUtil.encrypt(key, message)));
+      return smsMessage.toMessage();
     } catch (e) {
       print(e);
       return null;
     }
   }
 
-  static Future<List<SmsMessage>> getSMS(String phoneNumber) async {
+  static Future<List<Message>> getSMS(String phoneNumber) async {
     try {
       // trim for no space
       phoneNumber = phoneNumber.trim();
@@ -46,36 +45,25 @@ class SmsService {
               : phoneNumber;
 
       // get SMS of incoming phone number as with or without country code
-      List<SmsMessage> smsMessages = await query.querySms(
-          address: phoneNumber,
-          count: 1,
-          kinds: [SmsQueryKind.Inbox, SmsQueryKind.Sent]);
-      List<SmsMessage> smsMessagesWithModified = await query.querySms(
-          address: modifiedPhoneNumber,
-          count: 1,
-          kinds: [SmsQueryKind.Inbox, SmsQueryKind.Sent]);
+      List<SmsMessage> smsMessages = await query.querySms(address: phoneNumber, count: 1, kinds: [SmsQueryKind.Inbox, SmsQueryKind.Sent]);
+      List<SmsMessage> smsMessagesWithModified = await query.querySms(address: modifiedPhoneNumber, count: 1, kinds: [SmsQueryKind.Inbox, SmsQueryKind.Sent]);
 
       smsMessages.addAll(smsMessagesWithModified);
 
       if (smsMessages.length > 0) {
-        List<SmsThread> tempThreads = await query.queryThreads(
-            [smsMessages.first.threadId],
-            kinds: [SmsQueryKind.Inbox, SmsQueryKind.Sent]);
+        List<SmsThread> tempThreads = await query.queryThreads([smsMessages.first.threadId], kinds: [SmsQueryKind.Inbox, SmsQueryKind.Sent]);
         smsMessages = tempThreads.first.messages;
       }
 
-      return smsMessages;
+      return smsMessages.toMessages();
     } catch (e) {
       print(e);
       return [];
     }
   }
 
-  static Future<List<SmsThread>> getAllThreads() async {
-    return (await query.getAllThreads)
-        .where((element) =>
-            element.address.startsWith('+959') ||
-            element.address.startsWith('09'))
-        .toList();
+  static Future<List<MessageThread>> getAllThreads() async {
+    final threads = await query.getAllThreads;
+    return threads.where((element) => element.address.startsWith('+959') || element.address.startsWith('09')).toMessageThreads();
   }
 }

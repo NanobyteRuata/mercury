@@ -1,21 +1,22 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:mercury/components/new_message_dialog.dart';
-import 'package:mercury/models/contact.dart';
-import 'package:mercury/screens/messages_screen.dart';
-import 'package:mercury/services/contacts_db_service.dart';
-import 'package:mercury/services/sms_service.dart';
 import 'package:sms/sms.dart';
 
 import '../extensions.dart';
+import '../models/contact.dart';
+import '../models/message_thread.dart';
+import '../components/new_message_dialog.dart';
+import '../screens/messages_screen.dart';
+import '../services/contacts_db_service.dart';
+import '../services/sms_service.dart';
 
 class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<SmsThread> threads = [];
+  List<MessageThread> threads = [];
   List<Contact> contacts = [];
   SmsReceiver receiver = new SmsReceiver();
   SmsSender sender = new SmsSender();
@@ -90,7 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  ListTile _messageListTile(SmsThread thread) {
+  ListTile _messageListTile(MessageThread thread) {
     final trailingTextStyle = TextStyle(color: Theme.of(context).disabledColor, fontSize: 11);
     return ListTile(
       leading: Icon(Icons.comment, color: Colors.blue),
@@ -168,7 +169,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   _getThreads() async {
-    List<SmsThread> tempThreads = await SmsService.getAllThreads();
+    final tempThreads = await SmsService.getAllThreads();
     setState(() => threads = tempThreads);
   }
 

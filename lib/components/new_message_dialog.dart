@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:mercury/services/contacts_db_service.dart';
-import 'package:mercury/services/sms_service.dart';
-import 'package:sms/sms.dart';
+
+import '../models/message.dart';
+import '../services/contacts_db_service.dart';
+import '../services/sms_service.dart';
 
 class NewMessageDialog extends StatefulWidget {
   _NewMessageDialogState createState() => _NewMessageDialogState();
@@ -33,39 +34,25 @@ class _NewMessageDialogState extends State<NewMessageDialog> {
                 if (isSaveContact)
                   TextField(
                     controller: nameController,
-                    decoration: InputDecoration(
-                        prefixIcon: Icon(Icons.person),
-                        hintText: "Name or group name"),
+                    decoration: InputDecoration(prefixIcon: Icon(Icons.person), hintText: "Name or group name"),
                   ),
                 TextField(
                   controller: addressController,
                   maxLines: 2,
-                  decoration: InputDecoration(
-                      prefixIcon: Icon(Icons.phone_android),
-                      hintText: "Phones (seperated by commas \",\")"),
+                  decoration: InputDecoration(prefixIcon: Icon(Icons.phone_android), hintText: "Phones (seperated by commas \",\")"),
                 ),
                 TextField(
                   controller: messageController,
                   maxLines: 5,
-                  decoration: InputDecoration(
-                      prefixIcon: Icon(Icons.format_align_left),
-                      hintText: "Message"),
+                  decoration: InputDecoration(prefixIcon: Icon(Icons.format_align_left), hintText: "Message"),
                 ),
                 TextField(
                   controller: secretKeyController,
                   maxLength: 8,
-                  decoration: InputDecoration(
-                      prefixIcon: Icon(Icons.vpn_key),
-                      hintText: "Secret Key (8 characters)"),
+                  decoration: InputDecoration(prefixIcon: Icon(Icons.vpn_key), hintText: "Secret Key (8 characters)"),
                 ),
                 Row(
-                  children: [
-                    Checkbox(
-                        value: isSaveContact,
-                        onChanged: (value) =>
-                            setState(() => isSaveContact = value)),
-                    Text("Create new contact")
-                  ],
+                  children: [Checkbox(value: isSaveContact, onChanged: (value) => setState(() => isSaveContact = value)), Text("Create new contact")],
                 )
               ],
             ),
@@ -91,11 +78,7 @@ class _NewMessageDialogState extends State<NewMessageDialog> {
                                   content: Text(
                                     "Please write name",
                                   ),
-                                  actions: [
-                                    TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: Text("OK"))
-                                  ],
+                                  actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text("OK"))],
                                 ));
                         return;
                       }
@@ -104,11 +87,7 @@ class _NewMessageDialogState extends State<NewMessageDialog> {
                             context: context,
                             builder: (context) => AlertDialog(
                                   content: Text("Please write phone number"),
-                                  actions: [
-                                    TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: Text("OK"))
-                                  ],
+                                  actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text("OK"))],
                                 ));
                         return;
                       }
@@ -117,48 +96,28 @@ class _NewMessageDialogState extends State<NewMessageDialog> {
                             context: context,
                             builder: (context) => AlertDialog(
                                   content: Text("Please write a message"),
-                                  actions: [
-                                    TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: Text("OK"))
-                                  ],
+                                  actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text("OK"))],
                                 ));
                         return;
                       }
-                      if (secretKeyController.text.length > 0 &&
-                          secretKeyController.text.length < 8) {
+                      if (secretKeyController.text.length > 0 && secretKeyController.text.length < 8) {
                         showDialog(
                             context: context,
                             builder: (context) => AlertDialog(
-                                  content: Text(
-                                      "Secret key is optional but if you want a secret key, it must be 8 characters long"),
-                                  actions: [
-                                    TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: Text("OK"))
-                                  ],
+                                  content: Text("Secret key is optional but if you want a secret key, it must be 8 characters long"),
+                                  actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text("OK"))],
                                 ));
                         return;
                       }
-                      SmsMessage result;
+                      Message result;
                       if (secretKeyController.text.length == 8) {
-                        result = await SmsService.sendEncryptedSMS(
-                            addressController.text.split(','),
-                            messageController.text,
-                            secretKeyController.text +
-                                secretKeyController.text);
+                        result = await SmsService.sendEncryptedSMS(addressController.text.split(','), messageController.text, secretKeyController.text + secretKeyController.text);
                       } else {
-                        result = await SmsService.sendNormalSMS(
-                            addressController.text.split(','),
-                            messageController.text);
+                        result = await SmsService.sendNormalSMS(addressController.text.split(','), messageController.text);
                       }
                       if (result != null && isSaveContact)
                         ContactsDbService.saveContact(
-                            name: nameController.text,
-                            address: addressController.text,
-                            key: secretKeyController.text,
-                            isGroup:
-                                addressController.text.split(',').length > 1);
+                            name: nameController.text, address: addressController.text, key: secretKeyController.text, isGroup: addressController.text.split(',').length > 1);
                       nameController.text = "";
                       addressController.text = "";
                       messageController.text = "";

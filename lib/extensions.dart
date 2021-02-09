@@ -1,8 +1,63 @@
 import 'package:intl/intl.dart';
 import 'package:sms/sms.dart';
 
+import 'models/message_thread.dart';
+import 'models/message.dart';
+
+extension SmsMessageExtensions on SmsMessage {
+  Message toMessage() {
+    return Message()
+      ..threadId = this.threadId
+      ..address = this.address
+      ..sender = this.sender
+      ..body = this.body
+      ..kind = this.kind.toMessageKind()
+      ..date = this.date
+      ..dateSent = this.dateSent
+      ..isRead = this.isRead;
+  }
+}
+
+extension SmsMessageKindExtensions on SmsMessageKind {
+  MessageKind toMessageKind() {
+    switch (this) {
+      case SmsMessageKind.Sent:
+        return MessageKind.Sent;
+      case SmsMessageKind.Received:
+        return MessageKind.Received;
+      case SmsMessageKind.Draft:
+        return MessageKind.Draft;
+    }
+    return null;
+  }
+}
+
+extension SmsMessagesExtensions on Iterable<SmsMessage> {
+  List<Message> toMessages() {
+    try {
+      final messages = this.map((x) => x.toMessage()).toList();
+      return messages;
+    } catch (e) {
+      print(e);
+    }
+    return <Message>[];
+  }
+}
+
 extension SmsThreadExtensions on SmsThread {
   SmsMessage get lastMessage => this.messages[0];
+  MessageThread toMessageThread() {
+    return MessageThread()
+      ..threadId = this.threadId
+      ..address = this.address
+      ..messages = this.messages.toMessages();
+  }
+}
+
+extension SmsThreadsExtensions on Iterable<SmsThread> {
+  List<MessageThread> toMessageThreads() {
+    return this.map((x) => x.toMessageThread()).toList();
+  }
 }
 
 extension DateTimeExtensions on DateTime {

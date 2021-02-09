@@ -1,14 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:mercury/components/message_tile.dart';
-import 'package:mercury/models/contact.dart';
-import 'package:mercury/services/contacts_db_service.dart';
-import 'package:mercury/services/sms_service.dart';
 import 'package:sms/sms.dart';
 
 import '../extensions.dart';
+import '../models/contact.dart';
+import '../models/message.dart';
+import '../models/message_thread.dart';
+import '../components/message_tile.dart';
+import '../services/contacts_db_service.dart';
+import '../services/sms_service.dart';
 
 class MessagesScreen extends StatefulWidget {
-  final SmsThread thread;
+  final MessageThread thread;
   final Contact contact;
 
   @override
@@ -19,7 +23,7 @@ class MessagesScreen extends StatefulWidget {
 
 class _MessagesScreenState extends State<MessagesScreen> {
   final key = new GlobalKey<ScaffoldState>();
-  List<SmsMessage> smsMessages = [];
+  List<Message> smsMessages = [];
   bool isShowEncrypted = false;
   final _keyController = TextEditingController();
   final _nameController = TextEditingController();
@@ -31,7 +35,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
   @override
   void initState() {
     _checkContact();
-    _receiver.onSmsReceived.listen(_onSmsChanged);
+    _receiver.onSmsReceived.transform(StreamTransformer<SmsMessage, Message>.fromHandlers(handleData: (data, sink) => sink.add(data.toMessage()))).listen(_onSmsChanged);
     super.initState();
   }
 
@@ -179,7 +183,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
     );
   }
 
-  Widget _dateDivider(BuildContext context, SmsMessage message) {
+  Widget _dateDivider(BuildContext context, Message message) {
     final line = Expanded(child: Container(width: double.maxFinite, height: 0.5, color: Theme.of(context).focusColor));
     final dateSend = (message.dateSent ?? message.date).formatDate();
     return Container(
@@ -203,7 +207,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
   }
 
   _getMessages() async {
-    List<SmsMessage> tempMessages = [];
+    List<Message> tempMessages = [];
     if (widget.thread != null || (contact != null && !contact.isGroup)) {
       String tempAddress = widget.thread != null ? widget.thread.address : contact.address;
       tempMessages = await SmsService.getSMS(tempAddress);
@@ -212,9 +216,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
         tempMessages.addAll(await SmsService.getSMS(address));
       }
       tempMessages.sort((a, b) => a.date.isBefore(b.date) ? 1 : -1);
-      SmsMessage previousSms;
+      Message previousSms;
       tempMessages.removeWhere((element) {
-        if (previousSms != null && element.kind == SmsMessageKind.Sent && element.sender.trim() == previousSms.sender.trim() && element.body.trim() == previousSms.body.trim()) {
+        if (previousSms != null && element.kind == MessageKind.Sent && element.sender.trim() == previousSms.sender.trim() && element.body.trim() == previousSms.body.trim()) {
           return true;
         }
         previousSms = element;
@@ -274,8 +278,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
     _getMessages();
   }
 
-  _onSmsChanged(SmsMessage event) {
-    List<SmsMessage> tempSmsMessages = smsMessages;
+  _onSmsChanged(Message event) {
+    List<Message> tempSmsMessages = smsMessages;
     Function updateMessages = () {
       tempSmsMessages.insert(0, event);
       setState(() {
@@ -301,7 +305,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
   }
 
   _sendSms() async {
-    SmsMessage tempSmsMessage;
+    Message tempSmsMessage;
     if (_keyController.text.length != 8) {
       tempSmsMessage = await SmsService.sendNormalSMS(
           widget.thread != null ? [widget.thread.address] : contact.address.split(',').where((addressStr) => addressStr.trim() != "").toList(), _messageController.text);
@@ -312,7 +316,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
           _keyController.text + _keyController.text);
     }
     if (tempSmsMessage != null) {
-      tempSmsMessage.kind = SmsMessageKind.Sent;
+      tempSmsMessage.kind = MessageKind.Sent;
       tempSmsMessage.date = DateTime.now();
       _onSmsChanged(tempSmsMessage);
     }
