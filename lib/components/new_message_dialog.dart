@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 
 import '../models/message.dart';
 import '../services/contacts_db_service.dart';
@@ -9,6 +10,8 @@ class NewMessageDialog extends StatefulWidget {
 }
 
 class _NewMessageDialogState extends State<NewMessageDialog> {
+  final _smsService = GetIt.instance.get<SmsService>();
+
   bool isSaveContact = false;
 
   TextEditingController secretKeyController = TextEditingController();
@@ -111,9 +114,9 @@ class _NewMessageDialogState extends State<NewMessageDialog> {
                       }
                       Message result;
                       if (secretKeyController.text.length == 8) {
-                        result = await SmsService.sendEncryptedSMS(addressController.text.split(','), messageController.text, secretKeyController.text + secretKeyController.text);
+                        result = await _smsService.sendEncryptedSMS(addressController.text.split(','), messageController.text, secretKeyController.text + secretKeyController.text);
                       } else {
-                        result = await SmsService.sendNormalSMS(addressController.text.split(','), messageController.text);
+                        result = await _smsService.sendNormalSMS(addressController.text.split(','), messageController.text);
                       }
                       if (result != null && isSaveContact)
                         ContactsDbService.saveContact(

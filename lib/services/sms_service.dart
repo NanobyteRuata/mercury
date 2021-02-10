@@ -1,15 +1,17 @@
 import 'package:sms/sms.dart';
+import 'package:injectable/injectable.dart';
 
 import '../models/message_thread.dart';
 import '../models/message.dart';
 import '../utils/encryption_utils.dart';
 import '../extensions.dart';
 
+@singleton
 class SmsService {
-  static final SmsQuery query = new SmsQuery();
-  static final SmsSender sender = new SmsSender();
+  final SmsQuery query = new SmsQuery();
+  final SmsSender sender = new SmsSender();
 
-  static Future<Message> sendNormalSMS(List<String> phoneNumbers, String message) async {
+  Future<Message> sendNormalSMS(List<String> phoneNumbers, String message) async {
     try {
       SmsMessage smsMessage;
       for (String phoneNumber in phoneNumbers) smsMessage = await sender.sendSms(new SmsMessage(phoneNumber, message));
@@ -20,7 +22,7 @@ class SmsService {
     }
   }
 
-  static Future<Message> sendEncryptedSMS(List<String> phoneNumbers, String message, String key) async {
+  Future<Message> sendEncryptedSMS(List<String> phoneNumbers, String message, String key) async {
     try {
       SmsMessage smsMessage;
       for (String phoneNumber in phoneNumbers) smsMessage = await sender.sendSms(new SmsMessage(phoneNumber, EncryptionUtil.encrypt(key, message)));
@@ -31,7 +33,7 @@ class SmsService {
     }
   }
 
-  static Future<List<Message>> getSMS(String phoneNumber) async {
+  Future<List<Message>> getSMS(String phoneNumber) async {
     try {
       // trim for no space
       phoneNumber = phoneNumber.trim();
@@ -63,7 +65,7 @@ class SmsService {
     }
   }
 
-  static Future<List<MessageThread>> getAllThreads() async {
+  Future<List<MessageThread>> getAllThreads() async {
     final threads = await query.getAllThreads;
     return threads.where((element) => element.address.startsWith('+959') || element.address.startsWith('09')).toMessageThreads();
   }

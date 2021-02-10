@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:sms/sms.dart';
 
 import '../extensions.dart';
@@ -23,6 +24,8 @@ class MessagesScreen extends StatefulWidget {
 
 class _MessagesScreenState extends State<MessagesScreen> {
   final key = new GlobalKey<ScaffoldState>();
+  final _smsService = GetIt.instance.get<SmsService>();
+
   List<Message> smsMessages = [];
   bool isShowEncrypted = false;
   final _keyController = TextEditingController();
@@ -31,11 +34,16 @@ class _MessagesScreenState extends State<MessagesScreen> {
   final _messageController = TextEditingController();
   final _receiver = new SmsReceiver();
   Contact contact;
+  StreamSubscription<Message> _messageSub;
 
   @override
   void initState() {
     _checkContact();
-    _receiver.onSmsReceived.transform(StreamTransformer<SmsMessage, Message>.fromHandlers(handleData: (data, sink) => sink.add(data.toMessage()))).listen(_onSmsChanged);
+    _messageSub = _receiver.onSmsReceived
+        .transform(StreamTransformer<SmsMessage, Message>.fromHandlers(
+          handleData: (data, sink) => sink.add(data.toMessage()),
+        ))
+        .listen(_onSmsChanged);
     super.initState();
   }
 
@@ -45,6 +53,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
     _nameController.dispose();
     _addressController.dispose();
     _messageController.dispose();
+    _messageSub?.cancel();
     super.dispose();
   }
 
@@ -210,10 +219,10 @@ class _MessagesScreenState extends State<MessagesScreen> {
     List<Message> tempMessages = [];
     if (widget.thread != null || (contact != null && !contact.isGroup)) {
       String tempAddress = widget.thread != null ? widget.thread.address : contact.address;
-      tempMessages = await SmsService.getSMS(tempAddress);
+      tempMessages = await _smsService.getSMS(tempAddress);
     } else {
       for (String address in contact.address.split(',').where((addressStr) => addressStr.trim() != "")) {
-        tempMessages.addAll(await SmsService.getSMS(address));
+        tempMessages.addAll(await _smsService.getSMS(address));
       }
       tempMessages.sort((a, b) => a.date.isBefore(b.date) ? 1 : -1);
       Message previousSms;
@@ -307,10 +316,10 @@ class _MessagesScreenState extends State<MessagesScreen> {
   _sendSms() async {
     Message tempSmsMessage;
     if (_keyController.text.length != 8) {
-      tempSmsMessage = await SmsService.sendNormalSMS(
+      tempSmsMessage = await _smsService.sendNormalSMS(
           widget.thread != null ? [widget.thread.address] : contact.address.split(',').where((addressStr) => addressStr.trim() != "").toList(), _messageController.text);
     } else {
-      tempSmsMessage = await SmsService.sendEncryptedSMS(
+      tempSmsMessage = await _smsService.sendEncryptedSMS(
           widget.thread != null ? [widget.thread.address] : contact.address.split(',').where((addressStr) => addressStr.trim() != "").toList(),
           _messageController.text,
           _keyController.text + _keyController.text);

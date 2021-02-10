@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:sms/sms.dart';
 
 import '../extensions.dart';
@@ -16,6 +17,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final _smsService = GetIt.instance.get<SmsService>();
+
   List<MessageThread> threads = [];
   List<Contact> contacts = [];
   SmsReceiver receiver = new SmsReceiver();
@@ -169,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   _getThreads() async {
-    final tempThreads = await SmsService.getAllThreads();
+    final tempThreads = await _smsService.getAllThreads();
     setState(() => threads = tempThreads);
   }
 
