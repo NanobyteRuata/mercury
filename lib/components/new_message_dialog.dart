@@ -11,6 +11,7 @@ class NewMessageDialog extends StatefulWidget {
 
 class _NewMessageDialogState extends State<NewMessageDialog> {
   final _smsService = GetIt.instance.get<SmsService>();
+  final _contactsDbService = GetIt.instance.get<ContactsDbService>();
 
   bool isSaveContact = false;
 
@@ -119,8 +120,12 @@ class _NewMessageDialogState extends State<NewMessageDialog> {
                         result = await _smsService.sendNormalSMS(addressController.text.split(','), messageController.text);
                       }
                       if (result != null && isSaveContact)
-                        ContactsDbService.saveContact(
-                            name: nameController.text, address: addressController.text, key: secretKeyController.text, isGroup: addressController.text.split(',').length > 1);
+                        _contactsDbService.saveContact(
+                          name: nameController.text,
+                          address: addressController.text,
+                          key: secretKeyController.text,
+                          isGroup: addressController.text.split(',').length > 1,
+                        );
                       nameController.text = "";
                       addressController.text = "";
                       messageController.text = "";

@@ -18,6 +18,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final _smsService = GetIt.instance.get<SmsService>();
+  final _contactsDbService = GetIt.instance.get<ContactsDbService>();
 
   List<MessageThread> threads = [];
   List<Contact> contacts = [];
@@ -156,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           );
-          if (status) await ContactsDbService.deleteContact(contact.id);
+          if (status) await _contactsDbService.deleteContact(contact.id);
           _getContacts();
         },
       ),
@@ -177,7 +178,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   _getContacts() async {
-    List<Contact> tempContacts = await ContactsDbService.getAllContacts();
+    List<Contact> tempContacts = await _contactsDbService.getAllContacts();
     setState(() => contacts = tempContacts);
   }
 

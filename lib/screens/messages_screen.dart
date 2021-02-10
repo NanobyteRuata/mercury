@@ -26,6 +26,7 @@ class MessagesScreen extends StatefulWidget {
 class _MessagesScreenState extends State<MessagesScreen> {
   final key = new GlobalKey<ScaffoldState>();
   final _smsService = GetIt.instance.get<SmsService>();
+  final _contactsDbService = GetIt.instance.get<ContactsDbService>();
 
   List<Message> smsMessages = [];
   bool isShowEncrypted = false;
@@ -247,9 +248,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
   _saveContact() async {
     bool status = false;
     if (contact == null) {
-      status = await ContactsDbService.saveContact(name: _nameController.text, address: widget.thread.address, key: _keyController.text, isGroup: false);
+      status = await _contactsDbService.saveContact(name: _nameController.text, address: widget.thread.address, key: _keyController.text, isGroup: false);
     } else {
-      status = await ContactsDbService.updateContact(
+      status = await _contactsDbService.updateContact(
           name: _nameController.text,
           address: _addressController.text,
           key: _keyController.text,
@@ -263,14 +264,14 @@ class _MessagesScreenState extends State<MessagesScreen> {
   _checkContact() async {
     Contact tempContact;
     if (widget.thread != null) {
-      List<Contact> tempContactList = await ContactsDbService.getContactsWhere(address: widget.thread.address);
+      List<Contact> tempContactList = await _contactsDbService.getContactsWhere(address: widget.thread.address);
       if (tempContactList.length == 0) {
         String modifiedAddress = (widget.thread.address.indexOf('+959') == 0)
             ? widget.thread.address.replaceFirst('+959', '09')
             : (widget.thread.address.indexOf('09') == 0)
                 ? widget.thread.address.replaceFirst('09', '+959')
                 : widget.thread.address;
-        tempContactList = await ContactsDbService.getContactsWhere(address: modifiedAddress);
+        tempContactList = await _contactsDbService.getContactsWhere(address: modifiedAddress);
       }
       if (tempContactList.length > 0) {
         tempContact = tempContactList.first;
