@@ -16,7 +16,7 @@ class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   final _smsService = GetIt.instance.get<SmsService>();
   final _contactsDbService = GetIt.instance.get<ContactsDbService>();
 
@@ -24,11 +24,14 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Contact> contacts = [];
   SmsReceiver receiver = new SmsReceiver();
   SmsSender sender = new SmsSender();
+  TabController _tabController;
+  int _navigationIndex = 0;
 
   @override
   void initState() {
-    _getThreads();
     _getContacts();
+    _getThreads();
+    _tabController = new TabController(vsync: this, length: 2);
     receiver.onSmsReceived.listen(_onSmsChange);
     sender.onSmsDelivered.listen(_onSmsChange);
     super.initState();
@@ -36,30 +39,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Mercury"),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.refresh),
-            onPressed: () async {
-              await _getThreads();
-              await _getContacts();
-            },
-          )
-        ],
-      ),
-      body: DefaultTabController(
-        length: 2,
-        initialIndex: 0,
-        child: Column(
+    return DefaultTabController(
+      length: 2,
+      initialIndex: 0,
+      child: Scaffold(
+        appBar: AppBar(
+          title: _navigationIndex == 0 ? Text('Messages') : Text('Contacts'),
+        ),
+        body: Column(
           children: [
-            TabBar(
-              labelColor: Colors.blue,
-              tabs: [Tab(text: "All Messages"), Tab(text: "Contacts")],
-            ),
             Expanded(
               child: TabBarView(
+                controller: _tabController,
+                physics: NeverScrollableScrollPhysics(),
                 children: [
                   _messageListView(),
                   _contactListView(),
@@ -68,29 +60,70 @@ class _HomeScreenState extends State<HomeScreen> {
             )
           ],
         ),
-      ),
-      floatingActionButton: Builder(
-        builder: (__) {
-          return FloatingActionButton(
-            child: Icon(Icons.add_comment),
-            onPressed: () => showDialog(
-              context: context,
-              builder: (context) => NewMessageDialog(),
-            ),
-          );
-        },
+        bottomNavigationBar: BottomNavigationBar(
+          onTap: (index) {
+            setState(() {
+              _tabController.index = index;
+              _navigationIndex = index;
+            });
+            if (index == 0) {
+              setState(() => threads = null);
+              _getThreads();
+            }
+            if (index == 1) {
+              setState(() => contacts = null);
+              _getContacts();
+            }
+          },
+          elevation: 5,
+          currentIndex: _navigationIndex,
+          items: [
+            BottomNavigationBarItem(icon: new Icon(Icons.chat_rounded), label: 'Messages'),
+            BottomNavigationBarItem(icon: new Icon(Icons.people), label: 'Contacts'),
+          ],
+        ),
+        floatingActionButton: Builder(
+          builder: (__) {
+            return FloatingActionButton(
+              child: Icon(Icons.add_comment),
+              onPressed: () => showDialog(
+                context: context,
+                builder: (context) => NewMessageDialog(),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
 
   Widget _messageListView() {
-    if (threads.length == 0) return Center(child: CircularProgressIndicator());
+    return RefreshIndicator(
+      onRefresh: () async => await _getThreads(),
+      child: Scrollbar(
+        child: LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) {
+            if (threads == null || threads.length == 0) {
+              return ListView.builder(
+                itemCount: 1,
+                itemBuilder: (context, index) {
+                  return Container(
+                    height: constraints.maxHeight,
+                    child: Center(
+                      child: threads == null ? CircularProgressIndicator() : Text("No messages"),
+                    ),
+                  );
+                },
+              );
+            }
 
-    return Scrollbar(
-      child: ListView.separated(
-        itemCount: threads.length,
-        separatorBuilder: (_, __) => Divider(height: 1),
-        itemBuilder: (context, index) => _messageListTile(threads[index]),
+            return ListView.separated(
+              itemCount: threads.length,
+              separatorBuilder: (_, __) => Divider(height: 1),
+              itemBuilder: (context, index) => _messageListTile(threads[index]),
+            );
+          },
+        ),
       ),
     );
   }
@@ -127,14 +160,32 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _contactListView() {
-    if (contacts == null) return Center(child: CircularProgressIndicator());
-    if (contacts.length == 0) return Center(child: Text("No contacts"));
+    return RefreshIndicator(
+      onRefresh: () async => await _getContacts(),
+      child: Scrollbar(
+        child: LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) {
+            if (contacts == null || contacts.length == 0) {
+              return ListView.builder(
+                itemCount: 1,
+                itemBuilder: (context, index) {
+                  return Container(
+                    height: constraints.maxHeight,
+                    child: Center(
+                      child: threads == null ? CircularProgressIndicator() : Text("No contacts"),
+                    ),
+                  );
+                },
+              );
+            }
 
-    return Scrollbar(
-      child: ListView.separated(
-        separatorBuilder: (_, __) => Divider(height: 1),
-        itemCount: contacts.length,
-        itemBuilder: (context, index) => _contactListTile(contacts[index]),
+            return ListView.separated(
+              separatorBuilder: (_, __) => Divider(height: 1),
+              itemCount: contacts.length,
+              itemBuilder: (context, index) => _contactListTile(contacts[index]),
+            );
+          },
+        ),
       ),
     );
   }

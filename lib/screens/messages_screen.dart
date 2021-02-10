@@ -35,6 +35,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
   final _addressController = TextEditingController();
   final _messageController = TextEditingController();
   final _receiver = new SmsReceiver();
+  bool _hideContactDetails = true;
   Contact contact;
   StreamSubscription<Message> _messageSub;
 
@@ -67,8 +68,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
         title: Text(contact == null ? widget.thread.address : contact.name),
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh),
-            onPressed: _getMessages,
+            icon: Icon(Icons.perm_contact_cal),
+            onPressed: () => setState(() => _hideContactDetails = !_hideContactDetails),
           ),
         ],
       ),
@@ -83,88 +84,96 @@ class _MessagesScreenState extends State<MessagesScreen> {
   }
 
   Widget _contactDetails() {
-    return Card(
-      child: ExpansionTile(
-        leading: Icon(Icons.perm_contact_cal, color: Colors.blue),
-        title: Text("Contact Details"),
-        children: [
-          Padding(
-            padding: EdgeInsets.all(4),
-            child: Column(
-              children: [
-                TextField(
-                  controller: _keyController,
-                  decoration: InputDecoration(prefixIcon: Icon(Icons.vpn_key), hintText: "Secret Key (8 characters)"),
-                  maxLength: 8,
-                  onChanged: (value) {
-                    setState(() => isShowEncrypted = (value.length < 8) ? false : true);
-                  },
+    return Offstage(
+      offstage: _hideContactDetails,
+      child: Card(
+        child: Padding(
+          padding: EdgeInsets.all(4),
+          child: Column(
+            children: [
+              ListTile(
+                leading: Icon(Icons.perm_contact_cal, color: Colors.blue),
+                title: Text("Contact Details"),
+                trailing: IconButton(
+                  icon: Icon(Icons.close),
+                  onPressed: () => setState(() => _hideContactDetails = !_hideContactDetails),
                 ),
+              ),
+              TextField(
+                controller: _keyController,
+                decoration: InputDecoration(prefixIcon: Icon(Icons.vpn_key), hintText: "Secret Key (8 characters)"),
+                maxLength: 8,
+                onChanged: (value) {
+                  setState(() => isShowEncrypted = (value.length < 8) ? false : true);
+                },
+              ),
+              TextField(
+                controller: _nameController,
+                decoration: InputDecoration(
+                    prefixIcon: Icon(Icons.person),
+                    hintText: contact != null
+                        ? contact.isGroup
+                            ? "Group name"
+                            : "Name"
+                        : "Name"),
+                onChanged: (value) => setState(() => {}),
+              ),
+              if (widget.thread == null)
                 TextField(
-                  controller: _nameController,
-                  decoration: InputDecoration(
-                      prefixIcon: Icon(Icons.person),
-                      hintText: contact != null
-                          ? contact.isGroup
-                              ? "Group name"
-                              : "Name"
-                          : "Name"),
-                  onChanged: (value) => setState(() => {}),
+                  controller: _addressController,
+                  maxLines: 2,
+                  onChanged: (value) => setState(() {}),
+                  decoration: InputDecoration(prefixIcon: Icon(Icons.phone_android), hintText: "Phone Numbers (seperated by commas \",\")"),
                 ),
-                if (widget.thread == null)
-                  TextField(
-                    controller: _addressController,
-                    maxLines: 2,
-                    onChanged: (value) => setState(() {}),
-                    decoration: InputDecoration(prefixIcon: Icon(Icons.phone_android), hintText: "Phone Numbers (seperated by commas \",\")"),
-                  ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(onPressed: _saveContact, child: Text("Save")),
-                  ],
-                )
-              ],
-            ),
-          )
-        ],
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(onPressed: _saveContact, child: Text("Save")),
+                ],
+              )
+            ],
+          ),
+        ),
       ),
     );
   }
 
   Widget _messageListView() {
     return Expanded(
-      child: Scrollbar(
-        child: ListView.builder(
-          reverse: true,
-          itemCount: smsMessages.length,
-          padding: EdgeInsets.symmetric(horizontal: 8),
-          itemBuilder: (BuildContext context, int index) {
-            final prevMsg = index == 0 ? null : smsMessages[index - 1];
-            final message = smsMessages[index];
-            final dateChanged = _isDateChange((message.dateSent ?? message.date), (prevMsg?.dateSent ?? prevMsg?.date));
+      child: RefreshIndicator(
+        onRefresh: () => _getMessages(),
+        child: Scrollbar(
+          child: ListView.builder(
+            reverse: true,
+            itemCount: smsMessages.length,
+            padding: EdgeInsets.symmetric(horizontal: 8),
+            itemBuilder: (BuildContext context, int index) {
+              final prevMsg = index == 0 ? null : smsMessages[index - 1];
+              final message = smsMessages[index];
+              final dateChanged = _isDateChange((message.dateSent ?? message.date), (prevMsg?.dateSent ?? prevMsg?.date));
 
-            return Column(
-              children: [
-                if (index == smsMessages.length - 1) _dateDivider(context, message), // first and last message
-                MessageTile(
-                  secretKey: _keyController.text,
-                  decrypt: isShowEncrypted,
-                  smsMessage: message,
-                  onLongPress: () async {
-                    await Clipboard.setData(ClipboardData(text: message.decryptedBody(_keyController.text)));
-                    key.currentState.showSnackBar(SnackBar(
-                      width: 150,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
-                      behavior: SnackBarBehavior.floating,
-                      content: Text('Message copied', textAlign: TextAlign.center),
-                    ));
-                  },
-                ),
-                if (dateChanged && prevMsg != null) _dateDivider(context, prevMsg),
-              ],
-            );
-          },
+              return Column(
+                children: [
+                  if (index == smsMessages.length - 1) _dateDivider(context, message), // first and last message
+                  MessageTile(
+                    secretKey: _keyController.text,
+                    decrypt: isShowEncrypted,
+                    smsMessage: message,
+                    onLongPress: () async {
+                      await Clipboard.setData(ClipboardData(text: message.decryptedBody(_keyController.text)));
+                      key.currentState.showSnackBar(SnackBar(
+                        width: 150,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
+                        behavior: SnackBarBehavior.floating,
+                        content: Text('Message copied', textAlign: TextAlign.center),
+                      ));
+                    },
+                  ),
+                  if (dateChanged && prevMsg != null) _dateDivider(context, prevMsg),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -309,7 +318,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
     if (widget.thread != null && event.address == widget.thread.address) {
       updateMessages();
     } else {
-      List<String> addresses = contact.address.split(',').where((addressStr) => addressStr.trim() != "");
+      List<String> addresses = contact.address.split(',').where((addressStr) => addressStr.trim() != "").toList();
       for (String address in addresses) {
         address = address.trim();
         String modifiedAddress = (address.indexOf('+959') == 0)
