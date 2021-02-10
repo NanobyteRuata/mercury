@@ -2,33 +2,36 @@ import 'package:flutter/material.dart';
 
 import '../extensions.dart';
 import '../models/message.dart';
-import '../utils/encryption_utils.dart';
 
 class MessageTile extends StatelessWidget {
   final Message smsMessage;
   final bool decrypt;
   final String secretKey;
+  final Function onLongPress;
 
-  MessageTile({Key key, @required this.smsMessage, this.decrypt = false, this.secretKey}) : super(key: key);
+  MessageTile({Key key, @required this.smsMessage, this.decrypt = false, this.secretKey, this.onLongPress}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        textDirection: smsMessage.kind == MessageKind.Sent ? TextDirection.rtl : TextDirection.ltr,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: smsMessage.kind == MessageKind.Sent ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-              children: [
-                _messageInfoText(context, smsMessage),
-                _messageText(context, smsMessage),
-              ],
-            ),
-          )
-        ],
+    return GestureDetector(
+      onLongPress: onLongPress,
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          textDirection: smsMessage.kind == MessageKind.Sent ? TextDirection.rtl : TextDirection.ltr,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: smsMessage.kind == MessageKind.Sent ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                children: [
+                  _messageInfoText(context, smsMessage),
+                  _messageText(context, smsMessage),
+                ],
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
@@ -53,7 +56,7 @@ class MessageTile extends StatelessWidget {
         color: message.kind == MessageKind.Sent ? Colors.lightBlue[100] : Theme.of(context).cardColor,
       ),
       child: Text(
-        decrypt ? EncryptionUtil.decrypt(secretKey + secretKey, message.body) : message.body,
+        decrypt ? message.decryptedBody(secretKey) : message.body,
         textAlign: message.kind == MessageKind.Sent ? TextAlign.right : TextAlign.left,
       ),
     );

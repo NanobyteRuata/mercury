@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get_it/get_it.dart';
 import 'package:sms/sms.dart';
 
@@ -149,6 +150,10 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   secretKey: _keyController.text,
                   decrypt: isShowEncrypted,
                   smsMessage: message,
+                  onLongPress: () {
+                    final clipboardData = ClipboardData(text: message.decryptedBody(_keyController.text));
+                    Clipboard.setData(clipboardData);
+                  },
                 ),
                 if (dateChanged && prevMsg != null) _dateDivider(context, prevMsg),
               ],

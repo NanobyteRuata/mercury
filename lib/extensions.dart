@@ -3,6 +3,7 @@ import 'package:sms/sms.dart';
 
 import 'models/message_thread.dart';
 import 'models/message.dart';
+import 'utils/encryption_utils.dart';
 
 extension SmsMessageExtensions on SmsMessage {
   Message toMessage() {
@@ -58,6 +59,10 @@ extension SmsThreadsExtensions on Iterable<SmsThread> {
   List<MessageThread> toMessageThreads() {
     return this.map((x) => x.toMessageThread()).toList();
   }
+}
+
+extension MessageExtendions on Message {
+  String decryptedBody(secretKey) => EncryptionUtil.decrypt(secretKey + secretKey, this.body ?? '');
 }
 
 extension DateTimeExtensions on DateTime {
