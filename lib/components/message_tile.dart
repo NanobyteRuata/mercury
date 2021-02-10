@@ -53,12 +53,20 @@ class MessageTile extends StatelessWidget {
       constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.all(Radius.circular(12)),
-        color: message.kind == MessageKind.Sent ? Colors.lightBlue[100] : Theme.of(context).cardColor,
+        color: _getMessageBubbleColor(message.kind, context),
       ),
       child: Text(
         decrypt ? message.decryptedBody(secretKey) : message.body,
         textAlign: message.kind == MessageKind.Sent ? TextAlign.right : TextAlign.left,
       ),
     );
+  }
+
+  _getMessageBubbleColor(MessageKind msgKind, BuildContext context) {
+    if (msgKind == MessageKind.Sent) {
+      return Theme.of(context).brightness == Brightness.light ? Colors.lightBlue[100] : Colors.lightBlue;
+    } else {
+      return Theme.of(context).cardColor;
+    }
   }
 }
