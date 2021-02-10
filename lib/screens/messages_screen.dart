@@ -151,9 +151,14 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   secretKey: _keyController.text,
                   decrypt: isShowEncrypted,
                   smsMessage: message,
-                  onLongPress: () {
-                    final clipboardData = ClipboardData(text: message.decryptedBody(_keyController.text));
-                    Clipboard.setData(clipboardData);
+                  onLongPress: () async {
+                    await Clipboard.setData(ClipboardData(text: message.decryptedBody(_keyController.text)));
+                    key.currentState.showSnackBar(SnackBar(
+                      width: 150,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
+                      behavior: SnackBarBehavior.floating,
+                      content: Text('Message copied', textAlign: TextAlign.center),
+                    ));
                   },
                 ),
                 if (dateChanged && prevMsg != null) _dateDivider(context, prevMsg),
