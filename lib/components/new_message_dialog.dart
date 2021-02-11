@@ -52,8 +52,8 @@ class _NewMessageDialogState extends State<NewMessageDialog> {
                 ),
                 TextField(
                   controller: secretKeyController,
-                  maxLength: 8,
-                  decoration: InputDecoration(prefixIcon: Icon(Icons.vpn_key), hintText: "Secret Key (8 characters)"),
+                  maxLength: 16,
+                  decoration: InputDecoration(prefixIcon: Icon(Icons.vpn_key), hintText: "Secret Key"),
                 ),
                 Row(
                   children: [Checkbox(value: isSaveContact, onChanged: (value) => setState(() => isSaveContact = value)), Text("Create new contact")],
@@ -104,18 +104,18 @@ class _NewMessageDialogState extends State<NewMessageDialog> {
                                 ));
                         return;
                       }
-                      if (secretKeyController.text.length > 0 && secretKeyController.text.length < 8) {
+                      if (secretKeyController.text.length > 16) {
                         showDialog(
                             context: context,
                             builder: (context) => AlertDialog(
-                                  content: Text("Secret key is optional but if you want a secret key, it must be 8 characters long"),
+                                  content: Text("Secret key cannot be more than 16 characters long"),
                                   actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text("OK"))],
                                 ));
                         return;
                       }
                       Message result;
-                      if (secretKeyController.text.length == 8) {
-                        result = await _smsService.sendEncryptedSMS(addressController.text.split(','), messageController.text, secretKeyController.text + secretKeyController.text);
+                      if (secretKeyController.text.length > 0) {
+                        result = await _smsService.sendEncryptedSMS(addressController.text.split(','), messageController.text, secretKeyController.text);
                       } else {
                         result = await _smsService.sendNormalSMS(addressController.text.split(','), messageController.text);
                       }

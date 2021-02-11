@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:mercury/utils/encryption_utils.dart';
 import 'package:sms/sms.dart';
 
 import '../extensions.dart';
@@ -20,7 +21,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   final _smsService = GetIt.instance.get<SmsService>();
   final _contactsDbService = GetIt.instance.get<ContactsDbService>();
 
-  List<MessageThread> threads = [];
+  List<MessageThread> threads;
   List<Contact> contacts = [];
   SmsReceiver receiver = new SmsReceiver();
   SmsSender sender = new SmsSender();
@@ -130,13 +131,20 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   ListTile _messageListTile(MessageThread thread) {
     final trailingTextStyle = TextStyle(color: Theme.of(context).disabledColor, fontSize: 11);
+    String displayAddress = thread.address;
+    String displayBody = thread.lastMessage.body;
+    if(contacts.where((contact) => thread.address == contact.address || thread.address.modifiedAddress() == contact.address).length > 0) {
+      var contact = contacts.where((contact) => thread.address == contact.address || thread.address.modifiedAddress() == contact.address).first;
+      displayAddress = contact.name;
+      displayBody = EncryptionUtil.decrypt(contact.key, thread.lastMessage.body);
+    }
     return ListTile(
       leading: Icon(Icons.comment, color: Colors.blue),
       title: Text(
-        contacts.where((contact) => thread.address == contact.address).length > 0 ? contacts.where((contact) => thread.address == contact.address).first.name : thread.address,
+        displayAddress
       ),
       subtitle: Text(
-        thread.lastMessage.body,
+        displayBody,
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),

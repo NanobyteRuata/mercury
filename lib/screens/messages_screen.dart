@@ -29,7 +29,6 @@ class _MessagesScreenState extends State<MessagesScreen> {
   final _contactsDbService = GetIt.instance.get<ContactsDbService>();
 
   List<Message> smsMessages = [];
-  bool isShowEncrypted = false;
   final _keyController = TextEditingController();
   final _nameController = TextEditingController();
   final _addressController = TextEditingController();
@@ -101,11 +100,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
               ),
               TextField(
                 controller: _keyController,
-                decoration: InputDecoration(prefixIcon: Icon(Icons.vpn_key), hintText: "Secret Key (8 characters)"),
-                maxLength: 8,
-                onChanged: (value) {
-                  setState(() => isShowEncrypted = (value.length < 8) ? false : true);
-                },
+                decoration: InputDecoration(prefixIcon: Icon(Icons.vpn_key), hintText: "Secret Key"),
+                maxLength: 16,
+                onChanged: (value) {},
               ),
               TextField(
                 controller: _nameController,
@@ -157,7 +154,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   if (index == smsMessages.length - 1) _dateDivider(context, message), // first and last message
                   MessageTile(
                     secretKey: _keyController.text,
-                    decrypt: isShowEncrypted,
+                    decrypt: true,
                     smsMessage: message,
                     onLongPress: () async {
                       await Clipboard.setData(ClipboardData(text: message.decryptedBody(_keyController.text)));
@@ -261,6 +258,16 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   _saveContact() async {
     bool status = false;
+    if(_keyController.text.length > 16) {
+      showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                                  content: Text("Secret key cannot be more than 16 characters long"),
+                                  actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text("OK"))],
+                                ));
+                        return;
+    }
+
     if (contact == null) {
       status = await _contactsDbService.saveContact(name: _nameController.text, address: widget.thread.address, key: _keyController.text, isGroup: false);
     } else {
@@ -280,12 +287,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
     if (widget.thread != null) {
       List<Contact> tempContactList = await _contactsDbService.getContactsWhere(address: widget.thread.address);
       if (tempContactList.length == 0) {
-        String modifiedAddress = (widget.thread.address.indexOf('+959') == 0)
-            ? widget.thread.address.replaceFirst('+959', '09')
-            : (widget.thread.address.indexOf('09') == 0)
-                ? widget.thread.address.replaceFirst('09', '+959')
-                : widget.thread.address;
-        tempContactList = await _contactsDbService.getContactsWhere(address: modifiedAddress);
+        tempContactList = await _contactsDbService.getContactsWhere(address: widget.thread.address.modifiedAddress());
       }
       if (tempContactList.length > 0) {
         tempContact = tempContactList.first;
@@ -300,7 +302,6 @@ class _MessagesScreenState extends State<MessagesScreen> {
       _addressController.text = tempContact.address;
       setState(() {
         contact = tempContact;
-        isShowEncrypted = (tempContact.key != null && tempContact.key.length == 8) ? true : false;
       });
     }
 
@@ -335,14 +336,14 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   _sendSms() async {
     Message tempSmsMessage;
-    if (_keyController.text.length != 8) {
+    if (_keyController.text.length == 0) {
       tempSmsMessage = await _smsService.sendNormalSMS(
           widget.thread != null ? [widget.thread.address] : contact.address.split(',').where((addressStr) => addressStr.trim() != "").toList(), _messageController.text);
     } else {
       tempSmsMessage = await _smsService.sendEncryptedSMS(
           widget.thread != null ? [widget.thread.address] : contact.address.split(',').where((addressStr) => addressStr.trim() != "").toList(),
           _messageController.text,
-          _keyController.text + _keyController.text);
+          _keyController.text);
     }
     if (tempSmsMessage != null) {
       tempSmsMessage.kind = MessageKind.Sent;
