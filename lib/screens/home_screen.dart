@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:mercury/utils/encryption_utils.dart';
-import 'package:sms/sms.dart';
+import 'package:sms_maintained/sms.dart';
 
 import '../extensions.dart';
 import '../models/contact.dart';
@@ -17,7 +17,8 @@ class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   final _smsService = GetIt.instance.get<SmsService>();
   final _contactsDbService = GetIt.instance.get<ContactsDbService>();
 
@@ -79,8 +80,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           elevation: 5,
           currentIndex: _navigationIndex,
           items: [
-            BottomNavigationBarItem(icon: new Icon(Icons.chat_rounded), label: 'Messages'),
-            BottomNavigationBarItem(icon: new Icon(Icons.people), label: 'Contacts'),
+            BottomNavigationBarItem(
+                icon: new Icon(Icons.chat_rounded), label: 'Messages'),
+            BottomNavigationBarItem(
+                icon: new Icon(Icons.people), label: 'Contacts'),
           ],
         ),
         floatingActionButton: Builder(
@@ -111,7 +114,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   return Container(
                     height: constraints.maxHeight,
                     child: Center(
-                      child: threads == null ? CircularProgressIndicator() : Text("No messages"),
+                      child: threads == null
+                          ? CircularProgressIndicator()
+                          : Text("No messages"),
                     ),
                   );
                 },
@@ -130,19 +135,28 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   ListTile _messageListTile(MessageThread thread) {
-    final trailingTextStyle = TextStyle(color: Theme.of(context).disabledColor, fontSize: 11);
+    final trailingTextStyle =
+        TextStyle(color: Theme.of(context).disabledColor, fontSize: 11);
     String displayAddress = thread.address;
     String displayBody = thread.lastMessage.body;
-    if(contacts.where((contact) => thread.address == contact.address || thread.address.modifiedAddress() == contact.address).length > 0) {
-      var contact = contacts.where((contact) => thread.address == contact.address || thread.address.modifiedAddress() == contact.address).first;
+    if (contacts
+            .where((contact) =>
+                thread.address == contact.address ||
+                thread.address.modifiedAddress() == contact.address)
+            .length >
+        0) {
+      var contact = contacts
+          .where((contact) =>
+              thread.address == contact.address ||
+              thread.address.modifiedAddress() == contact.address)
+          .first;
       displayAddress = contact.name;
-      displayBody = EncryptionUtil.decrypt(contact.key, thread.lastMessage.body);
+      displayBody =
+          EncryptionUtil.decrypt(contact.key, thread.lastMessage.body);
     }
     return ListTile(
       leading: Icon(Icons.comment, color: Colors.blue),
-      title: Text(
-        displayAddress
-      ),
+      title: Text(displayAddress),
       subtitle: Text(
         displayBody,
         maxLines: 2,
@@ -180,7 +194,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   return Container(
                     height: constraints.maxHeight,
                     child: Center(
-                      child: threads == null ? CircularProgressIndicator() : Text("No contacts"),
+                      child: threads == null
+                          ? CircularProgressIndicator()
+                          : Text("No contacts"),
                     ),
                   );
                 },
@@ -190,7 +206,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             return ListView.separated(
               separatorBuilder: (_, __) => Divider(height: 1),
               itemCount: contacts.length,
-              itemBuilder: (context, index) => _contactListTile(contacts[index]),
+              itemBuilder: (context, index) =>
+                  _contactListTile(contacts[index]),
             );
           },
         ),
@@ -211,8 +228,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             builder: (context) => AlertDialog(
               content: Text("Are you sure?"),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(context, false), child: Text("No")),
-                TextButton(onPressed: () => Navigator.pop(context, true), child: Text("Yes"))
+                TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: Text("No")),
+                TextButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: Text("Yes"))
               ],
             ),
           );

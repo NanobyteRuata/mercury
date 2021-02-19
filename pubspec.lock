@@ -216,6 +216,13 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_image_compress:
+    dependency: "direct main"
+    description:
+      name: flutter_image_compress
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.7.0"
   flutter_launcher_icons:
     dependency: "direct dev"
     description:
@@ -223,6 +230,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.8.1"
+  flutter_plugin_android_lifecycle:
+    dependency: transitive
+    description:
+      name: flutter_plugin_android_lifecycle
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.0.11"
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -249,6 +263,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.2.0"
+  http:
+    dependency: transitive
+    description:
+      name: http
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.12.2"
   http_multi_server:
     dependency: transitive
     description:
@@ -270,6 +291,27 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.1.19"
+  image_cropper:
+    dependency: "direct main"
+    description:
+      name: image_cropper
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.3.1"
+  image_picker:
+    dependency: "direct main"
+    description:
+      name: image_picker
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.6.7+22"
+  image_picker_platform_interface:
+    dependency: transitive
+    description:
+      name: image_picker_platform_interface
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.1.6"
   injectable:
     dependency: transitive
     description:
@@ -382,6 +424,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "3.1.0"
+  plugin_platform_interface:
+    dependency: transitive
+    description:
+      name: plugin_platform_interface
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.0.3"
   pointycastle:
     dependency: transitive
     description:
@@ -436,13 +485,15 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.99"
-  sms:
+  sms_maintained:
     dependency: "direct main"
     description:
-      name: sms
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.2.4"
+      path: "."
+      ref: HEAD
+      resolved-ref: "4353f2aaccdb6b1ed07c1c218d544d2788bc5bb1"
+      url: "https://github.com/andreimc/flutter_sms.git"
+    source: git
+    version: "0.2.7"
   source_gen:
     dependency: transitive
     description:

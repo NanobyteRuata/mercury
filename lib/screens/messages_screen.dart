@@ -3,7 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get_it/get_it.dart';
-import 'package:sms/sms.dart';
+import 'package:mercury/components/new_message_dialog.dart';
+import 'package:sms_maintained/sms.dart';
 
 import '../extensions.dart';
 import '../models/contact.dart';
@@ -68,7 +69,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
         actions: [
           IconButton(
             icon: Icon(Icons.perm_contact_cal),
-            onPressed: () => setState(() => _hideContactDetails = !_hideContactDetails),
+            onPressed: () =>
+                setState(() => _hideContactDetails = !_hideContactDetails),
           ),
         ],
       ),
@@ -95,12 +97,14 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 title: Text("Contact Details"),
                 trailing: IconButton(
                   icon: Icon(Icons.close),
-                  onPressed: () => setState(() => _hideContactDetails = !_hideContactDetails),
+                  onPressed: () => setState(
+                      () => _hideContactDetails = !_hideContactDetails),
                 ),
               ),
               TextField(
                 controller: _keyController,
-                decoration: InputDecoration(prefixIcon: Icon(Icons.vpn_key), hintText: "Secret Key"),
+                decoration: InputDecoration(
+                    prefixIcon: Icon(Icons.vpn_key), hintText: "Secret Key"),
                 maxLength: 16,
                 onChanged: (value) {},
               ),
@@ -120,7 +124,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   controller: _addressController,
                   maxLines: 2,
                   onChanged: (value) => setState(() {}),
-                  decoration: InputDecoration(prefixIcon: Icon(Icons.phone_android), hintText: "Phone Numbers (seperated by commas \",\")"),
+                  decoration: InputDecoration(
+                      prefixIcon: Icon(Icons.phone_android),
+                      hintText: "Phone Numbers (seperated by commas \",\")"),
                 ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -147,26 +153,34 @@ class _MessagesScreenState extends State<MessagesScreen> {
             itemBuilder: (BuildContext context, int index) {
               final prevMsg = index == 0 ? null : smsMessages[index - 1];
               final message = smsMessages[index];
-              final dateChanged = _isDateChange((message.dateSent ?? message.date), (prevMsg?.dateSent ?? prevMsg?.date));
+              final dateChanged = _isDateChange(
+                  (message.dateSent ?? message.date),
+                  (prevMsg?.dateSent ?? prevMsg?.date));
 
               return Column(
                 children: [
-                  if (index == smsMessages.length - 1) _dateDivider(context, message), // first and last message
+                  if (index == smsMessages.length - 1)
+                    _dateDivider(context, message), // first and last message
                   MessageTile(
                     secretKey: _keyController.text,
                     decrypt: true,
                     smsMessage: message,
                     onLongPress: () async {
-                      await Clipboard.setData(ClipboardData(text: message.decryptedBody(_keyController.text)));
+                      await Clipboard.setData(ClipboardData(
+                          text: message.decryptedBody(_keyController.text)));
                       key.currentState.showSnackBar(SnackBar(
                         width: 150,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
+                        shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(20))),
                         behavior: SnackBarBehavior.floating,
-                        content: Text('Message copied', textAlign: TextAlign.center),
+                        content:
+                            Text('Message copied', textAlign: TextAlign.center),
                       ));
                     },
                   ),
-                  if (dateChanged && prevMsg != null) _dateDivider(context, prevMsg),
+                  if (dateChanged && prevMsg != null)
+                    _dateDivider(context, prevMsg),
                 ],
               );
             },
@@ -178,9 +192,24 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   Widget _messageComposer() {
     return Container(
-      decoration: BoxDecoration(border: Border(top: BorderSide(color: Colors.blue))),
+      decoration:
+          BoxDecoration(border: Border(top: BorderSide(color: Colors.blue))),
       child: Row(
         children: [
+          IconButton(
+            icon: Icon(Icons.image),
+            onPressed: () => showDialog(
+              context: context,
+              builder: (context) => NewMessageDialog(
+                address: widget.thread != null
+                    ? [widget.thread.address]
+                    : contact.address
+                        .split(',')
+                        .where((addressStr) => addressStr.trim() != "")
+                        .toList(),
+              ),
+            ),
+          ),
           Expanded(
             child: Padding(
               padding: EdgeInsets.all(8),
@@ -201,7 +230,10 @@ class _MessagesScreenState extends State<MessagesScreen> {
             ),
           ),
           IconButton(
-            icon: Icon(Icons.send, color: _messageController.text.length == 0 ? Colors.grey : Colors.green),
+            icon: Icon(Icons.send,
+                color: _messageController.text.length == 0
+                    ? Colors.grey
+                    : Colors.green),
             onPressed: _messageController.text.length == 0 ? null : _sendSms,
           )
         ],
@@ -210,7 +242,11 @@ class _MessagesScreenState extends State<MessagesScreen> {
   }
 
   Widget _dateDivider(BuildContext context, Message message) {
-    final line = Expanded(child: Container(width: double.maxFinite, height: 0.5, color: Theme.of(context).focusColor));
+    final line = Expanded(
+        child: Container(
+            width: double.maxFinite,
+            height: 0.5,
+            color: Theme.of(context).focusColor));
     final dateSend = (message.dateSent ?? message.date).formatDate();
     return Container(
       margin: EdgeInsets.only(bottom: 16),
@@ -220,7 +256,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
           line,
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Text(dateSend, style: TextStyle(fontSize: 10, color: Theme.of(context).disabledColor)),
+            child: Text(dateSend,
+                style: TextStyle(
+                    fontSize: 10, color: Theme.of(context).disabledColor)),
           ),
           line,
         ],
@@ -229,22 +267,29 @@ class _MessagesScreenState extends State<MessagesScreen> {
   }
 
   bool _isDateChange(DateTime currentDate, DateTime previousDate) {
-    return currentDate?.month != previousDate?.month || currentDate?.day != previousDate?.day;
+    return currentDate?.month != previousDate?.month ||
+        currentDate?.day != previousDate?.day;
   }
 
   _getMessages() async {
     List<Message> tempMessages = [];
     if (widget.thread != null || (contact != null && !contact.isGroup)) {
-      String tempAddress = widget.thread != null ? widget.thread.address : contact.address;
+      String tempAddress =
+          widget.thread != null ? widget.thread.address : contact.address;
       tempMessages = await _smsService.getSMS(tempAddress);
     } else {
-      for (String address in contact.address.split(',').where((addressStr) => addressStr.trim() != "")) {
+      for (String address in contact.address
+          .split(',')
+          .where((addressStr) => addressStr.trim() != "")) {
         tempMessages.addAll(await _smsService.getSMS(address));
       }
       tempMessages.sort((a, b) => a.date.isBefore(b.date) ? 1 : -1);
       Message previousSms;
       tempMessages.removeWhere((element) {
-        if (previousSms != null && element.kind == MessageKind.Sent && element.sender.trim() == previousSms.sender.trim() && element.body.trim() == previousSms.body.trim()) {
+        if (previousSms != null &&
+            element.kind == MessageKind.Sent &&
+            element.sender.trim() == previousSms.sender.trim() &&
+            element.body.trim() == previousSms.body.trim()) {
           return true;
         }
         previousSms = element;
@@ -258,36 +303,53 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   _saveContact() async {
     bool status = false;
-    if(_keyController.text.length > 16) {
+    if (_keyController.text.length > 16) {
       showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                                  content: Text("Secret key cannot be more than 16 characters long"),
-                                  actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text("OK"))],
-                                ));
-                        return;
+          context: context,
+          builder: (context) => AlertDialog(
+                content:
+                    Text("Secret key cannot be more than 16 characters long"),
+                actions: [
+                  TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text("OK"))
+                ],
+              ));
+      return;
     }
 
     if (contact == null) {
-      status = await _contactsDbService.saveContact(name: _nameController.text, address: widget.thread.address, key: _keyController.text, isGroup: false);
+      status = await _contactsDbService.saveContact(
+          name: _nameController.text,
+          address: widget.thread.address,
+          key: _keyController.text,
+          isGroup: false);
     } else {
       status = await _contactsDbService.updateContact(
           name: _nameController.text,
           address: _addressController.text,
           key: _keyController.text,
           id: contact.id,
-          isGroup: _addressController.text.split(',').where((addressStr) => addressStr.trim() != "").where((addressStr) => addressStr.trim() != "").length > 1);
+          isGroup: _addressController.text
+                  .split(',')
+                  .where((addressStr) => addressStr.trim() != "")
+                  .where((addressStr) => addressStr.trim() != "")
+                  .length >
+              1);
     }
-    final snackBar = SnackBar(content: Text(status ? 'Save successful' : 'Unsuccessful'));
+    final snackBar =
+        SnackBar(content: Text(status ? 'Save successful' : 'Unsuccessful'));
     key.currentState.showSnackBar(snackBar);
   }
 
   _checkContact() async {
     Contact tempContact;
     if (widget.thread != null) {
-      List<Contact> tempContactList = await _contactsDbService.getContactsWhere(address: widget.thread.address);
+      List<Contact> tempContactList = await _contactsDbService.getContactsWhere(
+          address: widget.thread.address);
       if (tempContactList.length == 0) {
-        tempContactList = await _contactsDbService.getContactsWhere(address: widget.thread.address.modifiedAddress());
+        tempContactList = await _contactsDbService.getContactsWhere(
+            address: widget.thread.address.modifiedAddress());
       }
       if (tempContactList.length > 0) {
         tempContact = tempContactList.first;
@@ -319,7 +381,10 @@ class _MessagesScreenState extends State<MessagesScreen> {
     if (widget.thread != null && event.address == widget.thread.address) {
       updateMessages();
     } else {
-      List<String> addresses = contact.address.split(',').where((addressStr) => addressStr.trim() != "").toList();
+      List<String> addresses = contact.address
+          .split(',')
+          .where((addressStr) => addressStr.trim() != "")
+          .toList();
       for (String address in addresses) {
         address = address.trim();
         String modifiedAddress = (address.indexOf('+959') == 0)
@@ -327,7 +392,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
             : (address.indexOf('09') == 0)
                 ? address.replaceFirst('09', '+959')
                 : address;
-        if (event.address.trim() == address.trim() || event.address.trim() == modifiedAddress.trim()) {
+        if (event.address.trim() == address.trim() ||
+            event.address.trim() == modifiedAddress.trim()) {
           updateMessages();
         }
       }
@@ -338,10 +404,21 @@ class _MessagesScreenState extends State<MessagesScreen> {
     Message tempSmsMessage;
     if (_keyController.text.length == 0) {
       tempSmsMessage = await _smsService.sendNormalSMS(
-          widget.thread != null ? [widget.thread.address] : contact.address.split(',').where((addressStr) => addressStr.trim() != "").toList(), _messageController.text);
+          widget.thread != null
+              ? [widget.thread.address]
+              : contact.address
+                  .split(',')
+                  .where((addressStr) => addressStr.trim() != "")
+                  .toList(),
+          _messageController.text);
     } else {
       tempSmsMessage = await _smsService.sendEncryptedSMS(
-          widget.thread != null ? [widget.thread.address] : contact.address.split(',').where((addressStr) => addressStr.trim() != "").toList(),
+          widget.thread != null
+              ? [widget.thread.address]
+              : contact.address
+                  .split(',')
+                  .where((addressStr) => addressStr.trim() != "")
+                  .toList(),
           _messageController.text,
           _keyController.text);
     }

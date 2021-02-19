@@ -1,5 +1,5 @@
 import 'package:intl/intl.dart';
-import 'package:sms/sms.dart';
+import 'package:sms_maintained/sms.dart';
 
 import 'models/message_thread.dart';
 import 'models/message.dart';
@@ -62,7 +62,8 @@ extension SmsThreadsExtensions on Iterable<SmsThread> {
 }
 
 extension MessageExtendions on Message {
-  String decryptedBody(secretKey) => EncryptionUtil.decrypt(secretKey, this.body ?? '');
+  String decryptedBody(secretKey) =>
+      EncryptionUtil.decrypt(secretKey, this.body ?? '');
 }
 
 extension DateTimeExtensions on DateTime {
@@ -94,9 +95,9 @@ extension DateTimeExtensions on DateTime {
 extension AddressExtensions on String {
   String modifiedAddress() {
     return (this.indexOf('+959') == 0)
-            ? this.replaceFirst('+959', '09')
-            : (this.indexOf('09') == 0)
-                ? this.replaceFirst('09', '+959')
-                : this;
+        ? this.replaceFirst('+959', '09')
+        : (this.indexOf('09') == 0)
+            ? this.replaceFirst('09', '+959')
+            : this;
   }
 }
